@@ -1,4 +1,6 @@
 import sqlite3
+import os
+
 
 def crear_base_datos():
 
@@ -12,7 +14,7 @@ def crear_base_datos():
             apellido TEXT NOT NULL,
             ci TEXT UNIQUE NOT NULL,
             telefono TEXT,
-            fecha_registro TEXT,
+            fecha_inscripcion TEXT,
             estado TEXT DEFAULT 'Activo'
         )
     """)
@@ -23,14 +25,6 @@ def crear_base_datos():
             nombre TEXT NOT NULL,
             especialidad TEXT,
             telefono TEXT
-        )
-    """)
-
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS rutinas (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nombre TEXT NOT NULL,
-            descripcion TEXT
         )
     """)
 
@@ -49,6 +43,7 @@ def crear_base_datos():
     conexion.close()
 
     print("Base de datos creada correctamente.")
+    print("Base creada en:", os.path.abspath("gimnasio.db"))
 
 
 if __name__ == "__main__":

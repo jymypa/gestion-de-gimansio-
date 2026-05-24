@@ -22,55 +22,36 @@ def guardar():
 
     fecha_actual = datetime.now()
 
-    fecha_registro = fecha_actual.strftime("%d/%m/%Y")
+    fecha_inscripcion = fecha_actual.strftime("%d/%m/%Y")
 
     conexion = conectar()
     cursor = conexion.cursor()
 
-    cursor.execute("""
-        INSERT INTO socios (
-            nombre,
-            apellido,
-            ci,
-            telefono,
-            fecha_registro,
-            estado
-        )
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (
-        entry_nombre.get(),
-        entry_apellido.get(),
-        entry_ci.get(),
-        entry_telefono.get(),
-        fecha_registro,
-        "Activo"
-    ))
+    try:
 
-    conexion.commit()
+        cursor.execute("""
+            INSERT INTO socios (
+                nombre,
+                apellido,
+                ci,
+                telefono,
+                fecha_inscripcion,
+                estado
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            entry_nombre.get(),
+            entry_apellido.get(),
+            entry_ci.get(),
+            entry_telefono.get(),
+            fecha_inscripcion,
+            "Activo"
+        ))
 
-    cursor.execute("""
-        SELECT * FROM socios
-        WHERE ci = ?
-    """, (entry_ci.get(),))
-
-    socio = cursor.fetchone()
-
-    conexion.close()
-
-    if socio:
-
-        entry_nombre.delete(0, tk.END)
-        entry_apellido.delete(0, tk.END)
-        entry_ci.delete(0, tk.END)
-        entry_telefono.delete(0, tk.END)
-
-        entry_nombre.insert(0, socio[1])
-        entry_apellido.insert(0, socio[2])
-        entry_ci.insert(0, socio[3])
-        entry_telefono.insert(0, socio[4])
+        conexion.commit()
 
         label_registro.config(
-            text=f"Registrado: {socio[5]}"
+            text=f"Registrado: {fecha_inscripcion}"
         )
 
         resultado.config(
@@ -78,17 +59,17 @@ def guardar():
             fg="green"
         )
 
-
-def buscar():
-
-    if entry_ci.get() == "":
+    except sqlite3.IntegrityError:
 
         resultado.config(
-            text="Ingrese el número de carnet",
+            text="El CI ya existe",
             fg="red"
         )
 
-        return
+    conexion.close()
+
+
+def buscar():
 
     conexion = conectar()
     cursor = conexion.cursor()
@@ -104,23 +85,19 @@ def buscar():
 
     if socio:
 
-        entry_nombre.delete(0, tk.END)
-        entry_apellido.delete(0, tk.END)
-        entry_ci.delete(0, tk.END)
-        entry_telefono.delete(0, tk.END)
+        resultado.config(
+            text=f"""
+SOCIO ENCONTRADO
 
-        entry_nombre.insert(0, socio[1])
-        entry_apellido.insert(0, socio[2])
-        entry_ci.insert(0, socio[3])
-        entry_telefono.insert(0, socio[4])
+Nombre: {socio[1]}
+Apellido: {socio[2]}
+CI: {socio[3]}
+Teléfono: {socio[4]}
+"""
+        )
 
         label_registro.config(
             text=f"Registrado: {socio[5]}"
-        )
-
-        resultado.config(
-            text="Socio encontrado",
-            fg="green"
         )
 
     else:
@@ -151,8 +128,7 @@ def actualizar():
     conexion.close()
 
     resultado.config(
-        text="Socio actualizado",
-        fg="green"
+        text="Socio actualizado"
     )
 
 
@@ -172,8 +148,7 @@ def eliminar():
     limpiar()
 
     resultado.config(
-        text="Socio eliminado",
-        fg="green"
+        text="Socio eliminado"
     )
 
 
@@ -185,7 +160,6 @@ def limpiar():
     entry_telefono.delete(0, tk.END)
 
     label_registro.config(text="")
-
     resultado.config(text="")
 
 
@@ -203,33 +177,18 @@ def abrir_ventana_socios():
     ventana = tk.Toplevel()
 
     ventana.title("Gestión de Socios")
-    ventana.geometry("450x380")
+    ventana.geometry("500x450")
     ventana.resizable(False, False)
 
-    tk.Label(
-        ventana,
-        text="Nombre"
-    ).grid(row=0, column=0, pady=5)
+    tk.Label(ventana, text="Nombre").grid(row=0, column=0, pady=5)
+    tk.Label(ventana, text="Apellido").grid(row=1, column=0, pady=5)
+    tk.Label(ventana, text="CI").grid(row=2, column=0, pady=5)
+    tk.Label(ventana, text="Teléfono").grid(row=3, column=0, pady=5)
 
-    tk.Label(
-        ventana,
-        text="Apellido"
-    ).grid(row=1, column=0, pady=5)
-
-    tk.Label(
-        ventana,
-        text="CI"
-    ).grid(row=2, column=0, pady=5)
-
-    tk.Label(
-        ventana,
-        text="Teléfono"
-    ).grid(row=3, column=0, pady=5)
-
-    entry_nombre = tk.Entry(ventana)
-    entry_apellido = tk.Entry(ventana)
-    entry_ci = tk.Entry(ventana)
-    entry_telefono = tk.Entry(ventana)
+    entry_nombre = tk.Entry(ventana, width=30)
+    entry_apellido = tk.Entry(ventana, width=30)
+    entry_ci = tk.Entry(ventana, width=30)
+    entry_telefono = tk.Entry(ventana, width=30)
 
     entry_nombre.grid(row=0, column=1)
     entry_apellido.grid(row=1, column=1)
@@ -239,35 +198,35 @@ def abrir_ventana_socios():
     tk.Button(
         ventana,
         text="Guardar",
-        width=15,
+        width=18,
         command=guardar
     ).grid(row=4, column=0, pady=10)
 
     tk.Button(
         ventana,
         text="Buscar",
-        width=15,
+        width=18,
         command=buscar
     ).grid(row=4, column=1)
 
     tk.Button(
         ventana,
         text="Actualizar",
-        width=15,
+        width=18,
         command=actualizar
     ).grid(row=5, column=0)
 
     tk.Button(
         ventana,
         text="Eliminar",
-        width=15,
+        width=18,
         command=eliminar
     ).grid(row=5, column=1)
 
     tk.Button(
         ventana,
         text="Limpiar",
-        width=15,
+        width=18,
         command=limpiar
     ).grid(row=6, column=0, columnspan=2, pady=10)
 
@@ -282,7 +241,8 @@ def abrir_ventana_socios():
     resultado = tk.Label(
         ventana,
         text="",
-        font=("Arial", 10, "bold")
+        font=("Arial", 10, "bold"),
+        justify="left"
     )
 
     resultado.grid(
